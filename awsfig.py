@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# AWS のアーキテクチャー図から CDKのTypeScript定義を生成する
-
+# Generate CDK TypeScript definitions from AWS architecture diagrams
 
 import boto3
 import json
@@ -12,7 +11,6 @@ from dotenv import load_dotenv
 import click 
 
 
-# コマンドライン引数の設定
 @click.command()
 @click.option('--debug','-D',is_flag=True, help='Debug mode')
 @click.option('--file', '-f',prompt='AWS Architecture Image Filename',help='Input Image Filename')
@@ -20,8 +18,6 @@ import click
 def generate(debug,file):
 
     """This tool generate Typescript from AWS figure"""
-    # .envからAPIキーを取得する。
-    # .envファイルには、DEEPL_API_KEY="APIキー"のように記載する。
     load_dotenv()
     access_key = os.environ["AWS_ACCESS_KEY"]
     secret_key = os.environ["AWS_SECRET_KEY"]
@@ -29,9 +25,6 @@ def generate(debug,file):
     image = open(file, "rb").read()
     b64 = base64.b64encode(image).decode("utf-8")
 
-    # 指定可能なリージョンはバージニア北部（us-east-1）またはオレゴン（us-west-2）
-    # デフォルトリージョンで良い場合はリージョン指定省略可
-    # サンプルのため認証情報が直接書き込まれています。適切な方法で取得するようにしてください。
     bedrock = boto3.client('bedrock-runtime', 
                         aws_access_key_id = access_key,
                         aws_secret_access_key = secret_key,
@@ -56,7 +49,7 @@ def generate(debug,file):
                     },
                     {
                         "type": "text",
-                        "text": "画像の構成を実現するAWS CDKのコードをTypeScriptで書いて提示してください。"
+                        "text": "Please write and present the AWS CDK code in TypeScript that will realize the image composition."
                     }
                 ]
                 }

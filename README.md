@@ -47,46 +47,59 @@ This sample code generates Typescript for CDK from an image of an AWS architectu
 
 ````sh
 $ ./awsfig.py -f aws.png
-はい、ここでTypeScriptを使用してAWS CDKで示された構成を実装するコードの例を示します。
+To realize the architecture depicted in the image using the AWS CDK in TypeScript, you can follow this code structure:
 
 ```typescript
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 
-class MyInfraStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+class MyInfrastructureStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // VPC
+    // Create a VPC
     const vpc = new ec2.Vpc(this, 'MyVPC', {
-      maxAzs: 3,
-      natGateways: 1,
+      maxAzs: 3, // Create resources in 3 Availability Zones
+      natGateways: 1, // Enable NAT Gateways for outbound internet access
     });
 
-    // Availability Zones
-    const availabilityZones = vpc.availabilityZones;
+    // Create public and private subnets
+    const publicSubnets = vpc.publicSubnets;
+    const privateSubnets = vpc.privateSubnets;
 
-    // Elastic Load Balancing
-    const lb = new elbv2.ApplicationLoadBalancer(this, 'LB', {
+    // Create an Elastic Load Balancing (ELB)
+    const elb = new elbv2.ApplicationLoadBalancer(this, 'MyELB', {
       vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC, // ELB should be in public subnets
+      },
+      internetFacing: true, // Internet-facing ELB
+    });
 
-    --- 中略 ---
+    // Create an EC2 instance in each private subnet
+    privateSubnets.forEach((subnet, index) => {
+      new ec2.Instance(this, `MyEC2Instance${index}`, {
+        vpc,
+        vpcSubnets: { subnets: [subnet] },
+        instanceType: ec2.InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.MICRO),
+        machineImage: ec2.MachineImage.latestAmazonLinux(),
+      });
+    });
+  }
 }
 
 const app = new cdk.App();
-new MyInfraStack(app, 'MyInfraStack');
+new MyInfrastructureStack(app, 'MyInfrastructureStack');
 ```
 
+This code will create the following resources:
 
-このコードでは、以下の手順を実行しています。
+1. A new VPC with 3 Availability Zones, public and private subnets, and NAT Gateways.
+2. An Application Load Balancer in the public subnets, accessible from the internet.
+3. An EC2 instance in each private subnet, which can communicate with the internet through the NAT Gateways.
 
-1. VPCを作成し、3つのアベイラビリティーゾーンとNAT Gatewayを設定しています。
-2. インターネット対応のApplication Load Balancerを作成し、パブリックサブネットに配置しています。
-3. 各アベイラビリティーゾーンにAmazon EC2インスタンスを作成し、プライベートサブネットに配置しています。
-4. 作成したEC2インスタンスをLoad Balancerのターゲットグループに追加しています。
-
-このコードは基本的な構成を示していますが、実際の運用環境ではさらにセキュリティグループの設定やオートスケーリンググループの作成など、追加の設定が必要になる可能性があります。
+Note that this code assumes you have the AWS CDK and its dependencies installed and configured correctly. Additionally, you might need to modify the code to match your specific requirements, such as instance types, security groups, and other configurations.
 
 ````
 
@@ -96,7 +109,7 @@ This will perform text translation. Even without specifying the source and targe
 
 ```sh
 $ ./translate.py
-翻訳したい文章を入力してください：Your inputs are not shared or leaked into any 3rd party and is safe for internal usage for up to highly confidential data.
+Enter the text you wish to translate：Your inputs are not shared or leaked into any 3rd party and is safe for internal usage for up to highly confidential data.
 入力されたデータは第三者に共有または漏洩されることなく、極秘情報を含む内部利用においても安全です。
 ```
 
@@ -106,7 +119,7 @@ This will generate questions to check capabilities regarding one of the Principl
 
 ```sh
 $ ./genolpqa.py
-質問を生成したいOLPを番号で選択してください。
+Select the OLP by number for which you wish to generate questions.
 1 : Customer Obsession
 2 : Ownership
 3 : Invent and Simplify
@@ -123,40 +136,41 @@ $ ./genolpqa.py
 14 : Deliver Results
 15 : Strive to be Earth’s Best Employer
 16 : Success and Scale Bring Broad Responsibility
->> 12
-Dive Deepについての質問を生成します。
+>>Generating questions about Are Right, A Lot.
 ```
 
 ```markdown
-1. **あなたが従事していたプロジェクトで、深く探求した課題や問題点はありましたか? その際、どのように課題を掘り下げ、解決策を見つけましたか?**
+### Main Questions
 
-   - その課題や問題点を特定するまでのプロセスを教えてください。
-   - 解決策を見つける過程で、どのような困難に直面しましたか?
-   - その経験から得た教訓や学びは何ですか?
+1. Can you share an experience where you relied on data and insights to challenge a widely accepted idea or approach within your organization?
 
-2. **新しい分野や技術を習得する際、どのように深く理解しようと努力しましたか? その過程で得られた洞察や発見はありますか?**
+   - What specific data or insights did you leverage?
+   - How did you present your findings to stakeholders and convince them to consider an alternative approach?
+   - What were the outcomes of implementing the new approach, and how did it improve upon the previous method?
 
-   - 新しい知識を習得する際の具体的な学習方法は何ですか?
-   - 理解を深めるために行った具体的な行動や取り組みを教えてください。
-   - その経験から得られた洞察や発見はどのようなものでしたか?
+2. Describe a situation where you had to make a difficult decision based on incomplete or ambiguous data.
 
-3. **仕事上で複雑な問題に直面したことはありますか? その際、どのように深く掘り下げて原因を探り、解決策を見つけましたか?**
+   - How did you evaluate the available information and identify the gaps or areas of uncertainty?
+   - What risk mitigation strategies did you employ to account for the unknowns?
+   - How did you communicate the decision and rationale to those impacted, and how did you address any concerns or resistance?
 
-   - その問題の複雑さや難しさはどのようなものでしたか?
-   - 原因を探る過程で行った具体的な行動や取り組みを教えてください。
-   - その経験から得られた教訓や学びは何ですか?
+3. Can you provide an example of when you proactively sought out diverse perspectives and used them to inform your decision-making process?
 
-4. **お客様のニーズや課題を深く理解するために、どのような取り組みを行いましたか? その過程で得られた洞察や発見はありますか?**
+   - How did you identify and engage individuals with different backgrounds, experiences, or viewpoints?
+   - What challenges did you encounter in synthesizing the diverse perspectives, and how did you overcome them?
+   - How did incorporating diverse perspectives enhance the quality of your decision or solution?
 
-   - お客様のニーズや課題を理解するためにどのような方法を取りましたか?
-   - その取り組みから得られた洞察や発見は何ですか?
-   - その経験から学んだことは何ですか?
+4. Have you ever encountered a situation where your data-driven approach conflicted with company policies or industry norms?
 
-5. **過去の失敗や課題から学び、深く掘り下げて理解を深めた経験はありますか? その際、どのように探求し、洞察を得ましたか?**
+   - How did you navigate the tension between data-driven insights and established practices or regulations?
+   - What steps did you take to ensure compliance while still leveraging data to drive innovation or optimization?
+   - How did you communicate the rationale for your approach to stakeholders, and what was the outcome?
 
-   - その失敗や課題の内容を具体的に教えてください。
-   - 深く理解するためにどのような取り組みを行いましたか?
-   - その経験から得られた洞察や学びは何ですか?
+5. Can you describe a time when you had to make a decision quickly based on limited data due to time constraints?
+
+   - What was the nature of the time-sensitive situation, and what were the potential consequences of inaction?
+   - How did you prioritize and analyze the available data to extract meaningful insights within the given timeframe?
+   - What safeguards or contingency plans did you put in place to mitigate risks associated with the accelerated decision-making process?
 ```
 
 ## License

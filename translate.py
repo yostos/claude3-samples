@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# AWS のアーキテクチャー図から CDKのTypeScript定義を生成する
+# Tralslation tool between Japanese and English
 
 
 import boto3
@@ -11,24 +11,20 @@ from dotenv import load_dotenv
 import click 
 
 
-# コマンドライン引数の設定
+# Definition of command line arguments
 @click.command()
 @click.option('--debug','-D',is_flag=True, help='Debug mode')
 
 def generate(debug):
 
     """This tool translates """
-    # .envからAPIキーを取得する。
-    # .envファイルには、DEEPL_API_KEY="APIキー"のように記載する。
+    # get API key from .env file
     load_dotenv()
     access_key = os.environ["AWS_ACCESS_KEY"]
     secret_key = os.environ["AWS_SECRET_KEY"]
 
-    source = input("翻訳したい文章を入力してください：")
+    source = input("Enter the text you wish to translate: ")
 
-    # 指定可能なリージョンはバージニア北部（us-east-1）またはオレゴン（us-west-2）
-    # デフォルトリージョンで良い場合はリージョン指定省略可
-    # サンプルのため認証情報が直接書き込まれています。適切な方法で取得するようにしてください。
     bedrock = boto3.client('bedrock-runtime', 
                         aws_access_key_id = access_key,
                         aws_secret_access_key = secret_key,
@@ -43,12 +39,12 @@ def generate(debug):
                 {
                     "role": "user",
                     "content": 
-                        "次の文章を翻訳してください。文章が日本語であれば英語に、文章が英語であれば日本語に翻訳してください。回答は翻訳文章のみを提示してください。"
+                        "Please translate the following sentences. If the sentence is in Japanese, translate it into English; if the sentence is in English, translate it into Japanese. Please provide only the translated text in your response."
                 },
                 {
                     "role": "assistant",
                     "content": 
-                        "では、翻訳する文章を入力してください。"
+                        "Now, please enter the text to be translated."
                 },
                 {
                     "role": "user",

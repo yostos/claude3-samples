@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# AWS のアーキテクチャー図から CDKのTypeScript定義を生成する
+# Tool to generate questions to check Amazon OLP
 
 
 import boto3
@@ -18,8 +18,6 @@ import click
 def generate(debug):
 
     """This tool generates questions according to Amazon OLP. """
-    # .envからAPIキーを取得する。
-    # .envファイルには、DEEPL_API_KEY="APIキー"のように記載する。
     load_dotenv()
     access_key = os.environ["AWS_ACCESS_KEY"]
     secret_key = os.environ["AWS_SECRET_KEY"]
@@ -43,28 +41,26 @@ def generate(debug):
         "Success and Scale Bring Broad Responsibility",
     ]
 
-    print("質問を生成したいOLPを番号で選択してください。")
+    print("Select the OLP by number for which you wish to generate questions.")
     for i in range(len(olp)):
         print(f"{i+1} : {olp[i]}")
     qano = int(input(">>"))
 
     qa_olp = olp[qano-1]
-    print(f"{qa_olp}についての質問を生成します。")
-    # 指定可能なリージョンはバージニア北部（us-east-1）またはオレゴン（us-west-2）
-    # デフォルトリージョンで良い場合はリージョン指定省略可
-    # サンプルのため認証情報が直接書き込まれています。適切な方法で取得するようにしてください。
+    print(f"Generating questions about {qa_olp}.")
     bedrock = boto3.client('bedrock-runtime', 
                            aws_access_key_id = access_key,
                            aws_secret_access_key = secret_key,
                            region_name = "us-west-2")
 
     question = f"""
-                あなたはアマゾンの面接官で採用面接を行っています。
-                アマゾンのOur Leadership Principleの{qa_olp}についての経験を確認するための
-                質問を使用としています。5パターンぐらい質問を提示してください。
-                それぞれの質問について深堀するための質問を3つづつ追加してください。
-                提示は生成した質問のみ表示してください。
-                生成した質問はMarkdown形式で整形して出力してください。
+    You are an interviewer at Amazon and are conducting a hiring interview. You
+    are interviewing for a position at Amazon and have been asked to identify
+    your experience with Amazon's Our Leadership Principle {qa_olp}.
+    Please provide about five questions. For each question, please add three
+    additional questions to go into more depth. Only the generated questions
+    should be displayed. The generated questions should be formatted and output
+    in Markdown format.
               """
 
     body = json.dumps(
